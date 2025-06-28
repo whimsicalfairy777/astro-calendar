@@ -29,27 +29,59 @@
     let events = [];
     fetch('events.json')
       .then(r => r.json())
-      .then(data => { events = data; buildCalendar(); document.getElementById('eventSummary').innerText = 'Click any date'; });
+      .then(data => {
+        events = data;
+        buildCalendar();
+        document.getElementById('eventSummary').innerText = 'Click any date';
+      });
 
     function buildCalendar() {
       const cal = document.getElementById('calendar'); cal.innerHTML = '';
-      ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => { const h = document.createElement('div'); h.textContent = d; h.classList.add('header'); cal.appendChild(h); });
+      ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => {
+        const h = document.createElement('div');
+        h.textContent = d;
+        h.classList.add('header');
+        cal.appendChild(h);
+      });
+
       const today = new Date(), y = today.getFullYear(), m = today.getMonth();
       const first = new Date(y,m,1).getDay(), days = new Date(y,m+1,0).getDate();
-      for(let i=0;i<first;i++) cal.appendChild(document.createElement('div'));
+
+      for(let i=0; i<first; i++) cal.appendChild(document.createElement('div'));
+
       for(let d=1; d<=days; d++) {
         const dtStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         const cell = document.createElement('div'); cell.textContent = d;
+
         if(dtStr === new Date().toISOString().slice(0,10)) cell.classList.add('today');
+
         cell.onclick = () => {
           const sum = document.getElementById('eventSummary');
           const ev = events.filter(e => e.datetime.slice(0,10) === dtStr);
-          sum.innerHTML = ev.length ? `<strong>${dtStr}</strong><br>` + ev.map(e => `• ${e.event}`).join('<br>') : `<strong>${dtStr}</strong><br>No events recorded.`;
+          if (!ev.length) {
+            sum.innerHTML = `<strong>${dtStr}</strong><br>No events recorded.`;
+          } else {
+            sum.innerHTML = `<strong>${dtStr}</strong><br><br>` + ev.map(e => `
+              <strong>${e.event}</strong><br>
+              <em>${e.meaning}</em><br>
+              <span><strong>Advice:</strong> ${e.advice}</span><br><br>
+            `).join('');
+          }
         };
         cal.appendChild(cell);
       }
     }
-    function createStar() { const s = document.createElement('div'); s.className = 'star'; s.textContent = '✦'; s.style.fontSize = Math.random()*16+8+'px'; s.style.left = Math.random()*100+'vw'; s.style.animationDuration = Math.random()*3+2+'s'; document.body.appendChild(s); setTimeout(()=>s.remove(),5000); }
+
+    function createStar() {
+      const s = document.createElement('div');
+      s.className = 'star';
+      s.textContent = '✦';
+      s.style.fontSize = Math.random()*16+8+'px';
+      s.style.left = Math.random()*100+'vw';
+      s.style.animationDuration = Math.random()*3+2+'s';
+      document.body.appendChild(s);
+      setTimeout(()=>s.remove(),5000);
+    }
     setInterval(createStar, 300);
   </script>
 </body>
