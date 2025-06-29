@@ -17,70 +17,124 @@
     #eventSummary { font-size:20px; padding:10px; background:#D1C9BD; border:2px solid #303328; display:inline-block; text-align:left; min-width:300px; max-width:90vw; color:#303328; }
     .star { position:absolute; color:#fff; animation:floatStars 5s linear infinite; opacity:0.8; }
     @keyframes floatStars { 0% { transform:translateY(0) scale(1); opacity:0.8 } 100% { transform:translateY(-100vh) scale(0.5); opacity:0 } }
+    .month-nav { display:flex; justify-content:center; align-items:center; margin-bottom:15px; }
+    .nav-btn { background:#9C816E; border:2px solid #D1C9BD; cursor:pointer; width:40px; height:40px; font-size:20px; color:#303328; margin:0 10px; }
+    #currentMonthYear { margin:0 15px; font-size:24px; min-width:200px; }
   </style>
 </head>
 <body>
   <div class="calendar-container">
     <h1>✦ Astro & Lunar Calendar ✦</h1>
+    <div class="month-nav">
+      <button class="nav-btn" onclick="changeMonth(-1)">❮</button>
+      <div id="currentMonthYear">January 2025</div>
+      <button class="nav-btn" onclick="changeMonth(1)">❯</button>
+    </div>
     <div id="calendar" class="calendar"></div>
-    <div id="eventSummary">Loading events…</div>
+    <div id="eventSummary">Click any date to see astrological events</div>
   </div>
   <script>
     let events = [];
-    fetch('events.json')
+    let currentDate = new Date(); // Tracks currently displayed month/year
+    currentDate.setDate(1); // Ensure we're at start of month
+    
+    // Load enriched events
+    fetch('enriched_events.json')
       .then(r => r.json())
       .then(data => {
         events = data;
-        buildCalendar();
-        document.getElementById('eventSummary').innerText = 'Click any date';
+        buildCalendar(currentDate.getFullYear(), currentDate.getMonth());
       });
 
-    function buildCalendar() {
-      const cal = document.getElementById('calendar'); cal.innerHTML = '';
-      ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => {
-        const h = document.createElement('div');
-        h.textContent = d;
-        h.classList.add('header');
-        cal.appendChild(h);
+    function buildCalendar(year, month) {
+      const cal = document.getElementById('calendar');
+      cal.innerHTML = '';
+      
+      // Set month/year header
+      const monthNames = ["January", "February", "March", "April", "May", "June",
+                         "July", "August", "September", "October", "November", "December"];
+      document.getElementById('currentMonthYear').textContent = 
+        `${monthNames[month]} ${year}`;
+      
+      // Create weekday headers
+      ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => { 
+        const h = document.createElement('div'); 
+        h.textContent = d; 
+        h.classList.add('header'); 
+        cal.appendChild(h); 
       });
-
-      const today = new Date(), y = today.getFullYear(), m = today.getMonth();
-      const first = new Date(y,m,1).getDay(), days = new Date(y,m+1,0).getDate();
-
-      for(let i=0; i<first; i++) cal.appendChild(document.createElement('div'));
-
-      for(let d=1; d<=days; d++) {
-        const dtStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const cell = document.createElement('div'); cell.textContent = d;
-
-        if(dtStr === new Date().toISOString().slice(0,10)) cell.classList.add('today');
-
-        cell.onclick = () => {
-          const sum = document.getElementById('eventSummary');
-          const ev = events.filter(e => e.datetime.slice(0,10) === dtStr);
-          if (!ev.length) {
-            sum.innerHTML = `<strong>${dtStr}</strong><br>No events recorded.`;
-          } else {
-            sum.innerHTML = `<strong>${dtStr}</strong><br><br>` + ev.map(e => `
-              <strong>${e.event}</strong><br>
-              <em>${e.meaning}</em><br>
-              <span><strong>Advice:</strong> ${e.advice}</span><br><br>
-            `).join('');
-          }
-        };
+      
+      // Calculate calendar dates
+      const first = new Date(year, month, 1).getDay();
+      const days = new Date(year, month + 1, 0).getDate();
+      const today = new Date();
+      const todayStr = today.toISOString().slice(0,10);
+      
+      // Add empty cells for days before first day of month
+      for(let i = 0; i < first; i++) {
+        cal.appendChild(document.createElement('div'));
+      }
+      
+      // Create day cells
+      for(let d = 1; d <= days; d++) {
+        const dtStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const cell = document.createElement('div'); 
+        cell.textContent = d;
+        
+        // Highlight today
+        if(dtStr === todayStr) cell.classList.add('today');
+        
+        // Add event indicators
+        const dayEvents = events.filter(e => e.datetime.slice(0,10) === dtStr);
+        if(dayEvents.length > 0) {
+          cell.innerHTML = `${d}<br><span style="font-size:8px">✦${dayEvents.length}</span>`;
+        }
+        
+        // Click handler
+        cell.onclick = () => showEvents(dtStr);
         cal.appendChild(cell);
       }
     }
-
-    function createStar() {
-      const s = document.createElement('div');
-      s.className = 'star';
-      s.textContent = '✦';
-      s.style.fontSize = Math.random()*16+8+'px';
-      s.style.left = Math.random()*100+'vw';
-      s.style.animationDuration = Math.random()*3+2+'s';
-      document.body.appendChild(s);
-      setTimeout(()=>s.remove(),5000);
+    
+    function showEvents(dateStr) {
+      const sum = document.getElementById('eventSummary');
+      const dayEvents = events.filter(e => e.datetime.slice(0,10) === dateStr);
+      
+      if(dayEvents.length === 0) {
+        sum.innerHTML = `<strong>${dateStr}</strong><br>No astrological events recorded`;
+        return;
+      }
+      
+      let html = `<strong>${dateStr}</strong>`;
+      dayEvents.forEach(event => {
+        html += `
+          <div style="margin-top:10px">
+            <strong>✦ ${event.event}</strong><br>
+            <em>Meaning:</em> ${event.meaning}<br>
+            <em>Advice:</em> ${event.advice}
+          </div>
+        `;
+      });
+      
+      sum.innerHTML = html;
+    }
+    
+    function changeMonth(offset) {
+      currentDate.setMonth(currentDate.getMonth() + offset);
+      buildCalendar(currentDate.getFullYear(), currentDate.getMonth());
+      document.getElementById('eventSummary').innerHTML = 
+        `Showing ${document.getElementById('currentMonthYear').textContent}`;
+    }
+    
+    function createStar() { 
+      const s = document.createElement('div'); 
+      s.className = 'star'; 
+      s.textContent = '✦'; 
+      s.style.fontSize = Math.random()*16+8+'px'; 
+      s.style.left = Math.random()*100+'vw'; 
+      s.style.animationDuration = Math.random()*3+2+'s'; 
+      document.body.appendChild(s); 
+      setTimeout(()=>s.remove(),5000); 
     }
     setInterval(createStar, 300);
   </script>
