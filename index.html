@@ -3,28 +3,61 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Astro & Lunar Calendar</title>
+  <title>Astro Calendar</title>
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap" rel="stylesheet"/>
   <style>
     body { font-family:'UnifrakturMaguntia',cursive; background:#EEF3ED; text-align:center; padding:20px; overflow:hidden; color:#303328; }
-    .calendar-container { background:#EEF3ED; border:3px solid #D1C9BD; padding:20px; display:inline-block; box-shadow:5px 5px 15px rgba(0,0,0,0.1); }
-    h1 { margin:0 0 10px; background:#9C816E; color:#303328; padding:10px 20px; border:2px solid #D1C9BD; display:inline-block; font-size:32px; }
+    .calendar-container { background:#EEF3ED; border:1px solid #9C816E; padding:20px; display:inline-block; box-shadow:5px 5px 15px rgba(0,0,0,0.1); }
+    h1 { margin:0 0 10px; background:#D1C9BD; color:#9C816E; border:1px solid #9C816E; display:inline-block; font-size:32px; }
     .calendar { display:grid; grid-template-columns:repeat(7,40px); grid-gap:5px; justify-content:center; margin-bottom:15px; }
-    .calendar div { width:40px; height:40px; line-height:40px; cursor:pointer; color:#303328; background:#F3EEEE; border:1px solid #D1C9BD; transition:all .2s; }
+    .calendar div { width:40px; height:20px; line-height:20px; cursor:pointer; color:#303328; background:#F3EEEE; border:1px solid #D1C9BD; transition:all .2s; }
     .calendar .header { font-weight:bold; background:#D1C9BD; }
     .calendar div:hover { background:rgba(48,51,40,0.1); border-color:#303328; }
     .calendar .today { background:rgba(48,51,40,0.2); border-color:#303328; }
-    #eventSummary { font-size:20px; padding:10px; background:#D1C9BD; border:2px solid #303328; display:inline-block; text-align:left; min-width:300px; max-width:90vw; color:#303328; }
-    .star { position:absolute; color:#fff; animation:floatStars 5s linear infinite; opacity:0.8; }
-    @keyframes floatStars { 0% { transform:translateY(0) scale(1); opacity:0.8 } 100% { transform:translateY(-100vh) scale(0.5); opacity:0 } }
+    #eventSummary { font-size:20px; padding:10px; background:#D1C9BD; border:1px solid #9C816E; display:inline-block; text-align:left; min-width:300px; max-width:90vw; color:#303328; }
+    .star { 
+      position: absolute;
+      color: #ffffff;
+      animation: floatStars linear infinite;
+      z-index: 0;
+      opacity: 0.7;
+      font-size: 16px;
+      text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+    }
+    @keyframes floatStars { 0% { 
+        transform: translateY(-50px) rotate(0deg) scale(0.5); 
+        opacity: 0; 
+      }
+      10% { 
+        opacity: 0.7; 
+      }
+      90% { 
+        opacity: 0.5; 
+      }
+      100% { 
+        transform: translateY(100vh) rotate(360deg) scale(1.2); 
+        opacity: 0; 
+      }
+    }
+    
+    .star-field {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
     .month-nav { display:flex; justify-content:center; align-items:center; margin-bottom:15px; }
-    .nav-btn { background:#9C816E; border:2px solid #D1C9BD; cursor:pointer; width:40px; height:40px; font-size:20px; color:#303328; margin:0 10px; }
+    .nav-btn { background:#D1C9BD; border:1px solid #9C816E; cursor:pointer; width:40px; height:40px; font-size:20px; color:#303328; margin:0 10px; }
     #currentMonthYear { margin:0 15px; font-size:24px; min-width:200px; }
   </style>
 </head>
 <body>
   <div class="calendar-container">
-    <h1>✦ Astro & Lunar Calendar ✦</h1>
+    <h1>✦ Astro Calendar ✦</h1>
     <div class="month-nav">
       <button class="nav-btn" onclick="changeMonth(-1)">❮</button>
       <div id="currentMonthYear">January 2025</div>
@@ -32,6 +65,9 @@
     </div>
     <div id="calendar" class="calendar"></div>
     <div id="eventSummary">Click any date to see astrological events</div>
+    <div class="footer">
+      ✦ Seek harmony with the cosmos and wisdom will follow ✦
+    </div>
   </div>
   <script>
     let events = [];
