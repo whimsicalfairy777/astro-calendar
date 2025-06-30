@@ -186,6 +186,11 @@
     .content-wrapper {
       padding: 0 15px;
     }
+    
+    .loading-message {
+      font-style: italic;
+      color: #5c5c5c;
+    }
   </style>
 </head>
 <body>
@@ -203,7 +208,7 @@
       
       <div id="calendar" class="calendar"></div>
       
-      <div id="eventSummary">Select a date to view astrological events</div>
+      <div id="eventSummary" class="loading-message">Loading astrological events...</div>
     </div>
   </div>
   
@@ -214,17 +219,30 @@
     
     // Load events from enriched_events.json
     function loadEvents() {
-      // In a real implementation, this would fetch from your JSON file
-      // For demonstration, we'll use sample data
-      setTimeout(() => {
-        events = getSampleEvents();
-        buildCalendar(currentDate.getFullYear(), currentDate.getMonth());
-        document.getElementById('eventSummary').innerHTML = 
-          'Select a date to view astrological events';
-      }, 300);
+      fetch('enriched_events.json')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to load events data');
+          }
+          return response.json();
+        })
+        .then(data => {
+          events = data;
+          buildCalendar(currentDate.getFullYear(), currentDate.getMonth());
+          document.getElementById('eventSummary').innerHTML = 
+            'Select a date to view astrological events';
+          document.getElementById('eventSummary').className = '';
+        })
+        .catch(error => {
+          console.error('Error loading events:', error);
+          document.getElementById('eventSummary').innerHTML = 
+            'Error loading events. Using sample data instead.';
+          events = getSampleEvents();
+          buildCalendar(currentDate.getFullYear(), currentDate.getMonth());
+        });
     }
     
-    // Sample events for demonstration
+    // Sample events for demonstration if JSON fails
     function getSampleEvents() {
       const today = new Date();
       const year = today.getFullYear();
