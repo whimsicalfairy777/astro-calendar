@@ -6,6 +6,12 @@
   <title>✦ Astro Calendar ✦</title>
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap" rel="stylesheet"/>
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
     body {
       font-family: 'UnifrakturMaguntia', cursive; 
       background: #EEF3ED; 
@@ -14,6 +20,10 @@
       overflow: hidden; 
       color: #303328;
       position: relative;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     
     .calendar-container { 
@@ -24,6 +34,8 @@
       box-shadow: 5px 5px 15px rgba(0,0,0,0.1); 
       position: relative;
       z-index: 10;
+      max-width: 95vw;
+      min-width: 350px;
     }
     
     h1 { 
@@ -86,6 +98,7 @@
       max-width: 90vw; 
       color: #303328; 
       line-height: 1.5;
+      border-radius: 3px;
     }
     
     .event-date {
@@ -93,6 +106,9 @@
       font-size: 20px;
       display: block;
       margin-bottom: 10px;
+      text-align: center;
+      padding-bottom: 5px;
+      border-bottom: 1px dashed #9C816E;
     }
     
     .star { 
@@ -142,6 +158,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: all 0.3s;
+    }
+    
+    .nav-btn:hover {
+      background: rgba(48,51,40,0.1);
     }
     
     #currentMonthYear { 
@@ -158,6 +179,19 @@
       font-size: 9px;
       color: #9C816E;
     }
+    
+    .event-detail {
+      margin-top: 12px;
+      padding: 8px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 3px;
+    }
+    
+    .loading {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
   </style>
 </head>
 <body>
@@ -169,7 +203,7 @@
       <button class="nav-btn" onclick="changeMonth(1)">❯</button>
     </div>
     <div id="calendar" class="calendar"></div>
-    <div id="eventSummary">Select a date to view astrological events</div>
+    <div id="eventSummary">Loading astrological events...</div>
   </div>
   
   <script>
@@ -177,47 +211,64 @@
     let currentDate = new Date();
     currentDate.setDate(1);
     
-    // Sample events data
-    events = [
-      {
-        "datetime": "2025-01-05T00:00:00",
-        "event": "Full Moon in Cancer",
-        "meaning": "A time for emotional reflection and nurturing relationships.",
-        "advice": "Focus on family and close relationships. Trust your intuition."
-      },
-      {
-        "datetime": "2025-01-12T00:00:00",
-        "event": "Mercury enters Capricorn",
-        "meaning": "Communication becomes more structured and practical.",
-        "advice": "Focus on long-term plans and professional communications."
-      },
-      {
-        "datetime": "2025-01-20T00:00:00",
-        "event": "Sun enters Aquarius",
-        "meaning": "A shift toward innovation, community, and forward-thinking.",
-        "advice": "Embrace your uniqueness and connect with like-minded people."
-      },
-      {
-        "datetime": "2025-01-28T00:00:00",
-        "event": "New Moon in Aquarius",
-        "meaning": "A powerful time for setting intentions around innovation.",
-        "advice": "Set goals related to technology, social causes, or personal freedom."
-      },
-      {
-        "datetime": "2025-02-03T00:00:00",
-        "event": "Venus trine Mars",
-        "meaning": "Harmony between desires and actions in relationships.",
-        "advice": "Express your feelings openly and take action on romantic impulses."
-      },
-      {
-        "datetime": "2025-02-14T00:00:00",
-        "event": "Mars sextile Jupiter",
-        "meaning": "Increased energy and optimism for pursuing goals.",
-        "advice": "Take bold actions on projects you've been planning."
-      }
-    ];
-
-    buildCalendar(currentDate.getFullYear(), currentDate.getMonth());
+    // Load events from enriched_events.json
+    function loadEvents() {
+      fetch('enriched_events.json')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to load events');
+          }
+          return response.json();
+        })
+        .then(data => {
+          events = data;
+          buildCalendar(currentDate.getFullYear(), currentDate.getMonth());
+          document.getElementById('eventSummary').innerHTML = 
+            'Select a date to view astrological events';
+        })
+        .catch(error => {
+          console.error('Error loading events:', error);
+          document.getElementById('eventSummary').innerHTML = 
+            'Error loading events. Using sample data instead.';
+          // Fallback to sample data
+          events = getSampleEvents();
+          buildCalendar(currentDate.getFullYear(), currentDate.getMonth());
+        });
+    }
+    
+    // Sample events for demonstration if JSON fails
+    function getSampleEvents() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth() + 1;
+      
+      return [
+        {
+          "datetime": `${year}-${month.toString().padStart(2,'0')}-05T00:00:00`,
+          "event": "Full Moon in Cancer",
+          "meaning": "A time for emotional reflection and nurturing relationships.",
+          "advice": "Focus on family and close relationships. Trust your intuition."
+        },
+        {
+          "datetime": `${year}-${month.toString().padStart(2,'0')}-12T00:00:00`,
+          "event": "Mercury enters Capricorn",
+          "meaning": "Communication becomes more structured and practical.",
+          "advice": "Focus on long-term plans and professional communications."
+        },
+        {
+          "datetime": `${year}-${month.toString().padStart(2,'0')}-20T00:00:00`,
+          "event": "Sun enters Aquarius",
+          "meaning": "A shift toward innovation, community, and forward-thinking.",
+          "advice": "Embrace your uniqueness and connect with like-minded people."
+        },
+        {
+          "datetime": `${year}-${month.toString().padStart(2,'0')}-28T00:00:00`,
+          "event": "New Moon in Aquarius",
+          "meaning": "A powerful time for setting intentions around innovation.",
+          "advice": "Set goals related to technology, social causes, or personal freedom."
+        }
+      ];
+    }
     
     function buildCalendar(year, month) {
       const cal = document.getElementById('calendar');
@@ -317,6 +368,9 @@
       document.body.appendChild(s); 
       setTimeout(()=>s.remove(), (duration+2)*1000); 
     }
+    
+    // Initialize the calendar
+    loadEvents();
     
     // Create initial stars
     for (let i = 0; i < 30; i++) {
