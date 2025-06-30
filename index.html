@@ -190,6 +190,7 @@
     .loading-message {
       font-style: italic;
       color: #5c5c5c;
+      text-align: center;
     }
   </style>
 </head>
@@ -217,17 +218,18 @@
     let currentDate = new Date();
     currentDate.setDate(1);
     
-    // Load events from enriched_events.json
+    // Function to load events with retry logic
     function loadEvents() {
       fetch('enriched_events.json')
         .then(response => {
           if (!response.ok) {
-            throw new Error('Failed to load events data');
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
           return response.json();
         })
         .then(data => {
           events = data;
+          console.log('Events loaded successfully:', events);
           buildCalendar(currentDate.getFullYear(), currentDate.getMonth());
           document.getElementById('eventSummary').innerHTML = 
             'Select a date to view astrological events';
@@ -335,7 +337,11 @@
     
     function showEvents(dateStr) {
       const sum = document.getElementById('eventSummary');
-      const dayEvents = events.filter(e => e.datetime.slice(0,10) === dateStr);
+      const dayEvents = events.filter(e => {
+        // Handle different date formats
+        const eventDate = new Date(e.datetime).toISOString().slice(0,10);
+        return eventDate === dateStr;
+      });
       
       if(dayEvents.length === 0) {
         sum.innerHTML = `<span class="event-date">${formatDate(dateStr)}</span>No astrological events recorded for this date`;
